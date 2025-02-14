@@ -49,39 +49,31 @@ const buttonIcon = () => {
 
   const handleLogin = async () => {
     setIsLoading(true);
-
+  
     try {
       if (!signIn) {
         throw new Error("Sign-in instance is undefined.");
       }
-
-      if (strategy === "email" || strategy === "phone") {
-        const identifier = strategy === "email" ? "test@example.com" : "+1234567890";
-        const signInResult = await signIn.create({ identifier });
-
-        if (!signInResult.supportedFirstFactors || signInResult.supportedFirstFactors.length === 0) {
-          throw new Error("No supported first factors available.");
-        }
-
-        router.push("./auth/verify");
+  
+      if (strategy === "email") {
+        // Navigate to sign-in page instead of creating sign-in directly
+        router.push("./auth/sign-in");
       } else {
         const { createdSessionId, setActive } = await startOAuthFlow({
-          redirectUrl: Linking.createURL("/dashboard"),
+          redirectUrl: Linking.createURL("(tabs)"),
         });
-
+  
         if (createdSessionId) {
           setActive?.({ session: createdSessionId });
         }
       }
     } catch (err) {
       console.error("Authentication Error:", err);
-      const errorMessage = err instanceof Error ? err.message : "An error occurred.";
-      alert("Login Failed: " + errorMessage);
+      alert("Login Failed: " + (err instanceof Error ? err.message : "An error occurred."));
     } finally {
       setIsLoading(false);
     }
   };
-
   return (
     <TouchableOpacity
       onPress={handleLogin}
