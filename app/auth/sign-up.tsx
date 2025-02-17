@@ -14,9 +14,21 @@ const EmailSignUp = () => {
     setIsLoading(true);
     try {
       if (!signUp) throw new Error("Sign-up instance is undefined.");
+
+      // Step 1: Check email format
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email)) {
+        throw new Error("Please enter a valid email address.");
+      }
+
+      // Step 2: Create a new user
       await signUp.create({ emailAddress: email, password });
+
+      // Step 3: Prepare for email address verification
       await signUp.prepareEmailAddressVerification();
-      router.push("/auth/verify-email"); // Redirect to email verification page
+
+      // Step 4: Redirect to email verification page
+      router.push("/auth/verify-email");
     } catch (err) {
       console.error("Sign-up Error:", err);
       alert("Sign-up Failed: " + (err instanceof Error ? err.message : "An error occurred."));

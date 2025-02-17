@@ -1,12 +1,13 @@
 import React, { useState } from "react";
 import { View, Text, TextInput, TouchableOpacity, ActivityIndicator, StyleSheet } from "react-native";
-import { useSignUp } from "@clerk/clerk-expo";
+import { useSignUp, useSession } from "@clerk/clerk-expo";
 import { useRouter } from "expo-router";
 
-const VerifyEmail = () => {
-  const [code, setCode] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const { signUp } = useSignUp();
+const VerifyEmail: React.FC = () => {
+  const [code, setCode] = useState<string>("");
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const { signUp, setActive } = useSignUp();
+  const { isLoaded } = useSession();
   const router = useRouter();
 
   const handleVerifyEmail = async () => {
@@ -16,9 +17,18 @@ const VerifyEmail = () => {
 
       // Verify the OTP code entered by the user
       const result = await signUp.attemptEmailAddressVerification({ code });
-      
+
       if (result.status === "complete") {
-        router.push("./dashboard"); // Redirect to dashboard after successful verification
+        const sessionId = result.createdSessionId;
+
+        if (sessionId) {
+          // ✅ Set the active session
+          await setActive!({ session: sessionId });
+
+          router.replace("./../(tabs)"); // Redirect to dashboard
+        } else {
+          throw new Error("No session created after verification.");
+        }
       } else {
         throw new Error("Email verification failed. Please check the code.");
       }
@@ -43,7 +53,7 @@ const VerifyEmail = () => {
         keyboardType="numeric"
       />
 
-      <TouchableOpacity onPress={handleVerifyEmail} style={styles.button} disabled={isLoading}>
+      <TouchableOpacity onPress={handleVerifyEmail} style={styles.button} disabled={isLoading || !isLoaded}>
         {isLoading ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Verify</Text>}
       </TouchableOpacity>
     </View>
